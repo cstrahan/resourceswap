@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Redirect Rules</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Redirect Rules</h1>
+
+    <div class="status-section">
+        <label for="extensionStatus">Extension Status:</label>
+        <input type="checkbox" id="extensionStatus">
+    </div>
+
+    <div class="add-rule-section">
+        <h2>Add New Rule</h2>
+        <form id="addRuleForm">
+            <label for="localUrl">Local URL:</label>
+            <input type="text" id="localUrl" placeholder="e.g., http://localhost:1234/index.js" required>
+
+            <label for="remoteUrlFilter">Remote URL Filter:</label>
+            <input type="text" id="remoteUrlFilter"
+                placeholder="e.g., https://example.com/_assets/main.js" required>
+
+            <label for="resourceType">Resource Type:</label>
+            <select id="resourceType" required>
+                <option value="script">script</option>
+                <option value="stylesheet">stylesheet</option>
+                <option value="xmlhttprequest">xmlhttprequest (API/fetch)</option>
+                <option value="image">image</option>
+                <option value="font">font</option>
+                <option value="media">media</option>
+                <option value="other">other</option>
+            </select>
+
+            <button type="submit">Add Rule</button>
+        </form>
+    </div>
+
+    <div class="rules-list-section">
+        <h2>Existing Rules</h2>
+        <ul id="rulesList">
+        </ul>
+    </div>
+
+    <div class="import-export-section" style="margin-top: 16px; padding: 0 10px 10px;">
+        <h2>Import / Export</h2>
+        <button id="exportRules" style="margin-right: 8px;">Export JSON</button>
+        <button id="importRules">Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
