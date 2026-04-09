@@ -1,12 +1,22 @@
+// When opened as a pop-out window, enable responsive layout.
+if (window.location.search.includes("window=1")) {
+    document.body.classList.add("popout");
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const addRuleForm = document.getElementById('addRuleForm');
     const rulesList = document.getElementById('rulesList');
     const extensionStatusToggle = document.getElementById('extensionStatus');
-    // const clearAllRulesButton = document.getElementById('clearAllRules'); // REMOVE THIS LINE
+    const extensionStatusLabel = document.getElementById('extensionStatusLabel');
+    const statusEl = document.getElementById('status');
 
-    // Load rules and extension status when the popup opens
     loadRules();
     loadExtensionStatus();
+
+    function showStatus(message, type) {
+        statusEl.textContent = message;
+        statusEl.className = 'status ' + type;
+    }
 
     addRuleForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -15,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const remoteUrlFilter = document.getElementById('remoteUrlFilter').value;
         const resourceType = document.getElementById('resourceType').value;
 
-        // Get existing rules to determine the next ID
         const existingRules = await getStoredRules();
         const newId = existingRules.length > 0 ? Math.max(...existingRules.map(rule => rule.id)) + 1 : 1;
 
@@ -24,55 +33,56 @@ document.addEventListener('DOMContentLoaded', () => {
             localUrl,
             remoteUrlFilter,
             resourceType,
-            enabled: true // New rules are enabled by default
+            enabled: true
         };
 
         const updatedRules = [...existingRules, newRule];
         await saveRules(updatedRules);
         await applyRulesToExtension(updatedRules);
-        loadRules(); // Refresh the displayed list
+        loadRules();
         addRuleForm.reset();
+        showStatus('Rule added', 'success');
     });
 
     rulesList.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('delete-rule')) {
-            const ruleIdToDelete = parseInt(event.target.dataset.id);
+        const btn = event.target.closest('button');
+        if (!btn) return;
+
+        if (btn.classList.contains('delete-rule')) {
+            const ruleIdToDelete = parseInt(btn.dataset.id);
             const existingRules = await getStoredRules();
             const updatedRules = existingRules.filter(rule => rule.id !== ruleIdToDelete);
             await saveRules(updatedRules);
             await applyRulesToExtension(updatedRules);
             loadRules();
-        } else if (event.target.classList.contains('toggle-rule')) {
-            const ruleIdToToggle = parseInt(event.target.dataset.id);
+        } else if (btn.classList.contains('toggle-rule')) {
+            const ruleIdToToggle = parseInt(btn.dataset.id);
             const existingRules = await getStoredRules();
             const updatedRules = existingRules.map(rule =>
                 rule.id === ruleIdToToggle ? { ...rule, enabled: !rule.enabled } : rule
             );
             await saveRules(updatedRules);
             await applyRulesToExtension(updatedRules);
-            loadRules(); // Refresh to show updated status
+            loadRules();
         }
     });
 
     extensionStatusToggle.addEventListener('change', async (event) => {
         const isEnabled = event.target.checked;
+        updateStatusLabel(isEnabled);
         await chrome.storage.local.set({ extensionEnabled: isEnabled });
         if (isEnabled) {
             const rules = await getStoredRules();
             await applyRulesToExtension(rules);
         } else {
-            await applyRulesToExtension([]); // Clear all rules if extension is disabled
+            await applyRulesToExtension([]);
         }
     });
 
-    // REMOVE THIS BLOCK
-    // clearAllRulesButton.addEventListener('click', async () => {
-    //     if (confirm("Are you sure you want to clear all redirect rules?")) {
-    //         await saveRules([]);
-    //         await applyRulesToExtension([]);
-    //         loadRules();
-    //     }
-    // });
+    function updateStatusLabel(isEnabled) {
+        extensionStatusLabel.textContent = isEnabled ? 'Enabled' : 'Disabled';
+        extensionStatusLabel.className = isEnabled ? 'label-enabled' : 'label-disabled';
+    }
 
     async function getStoredRules() {
         return new Promise((resolve) => {
@@ -94,29 +104,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const rules = await getStoredRules();
         rulesList.innerHTML = '';
         if (rules.length === 0) {
-            rulesList.innerHTML = '<p style="text-align: center; color: #666; padding: 10px;">No redirect rules added yet.</p>';
+            rulesList.innerHTML = '<div class="empty-msg">No redirect rules added yet.</div>';
             return;
         }
 
         rules.forEach(rule => {
-            const li = document.createElement('li');
-            li.innerHTML = `
+            const div = document.createElement('div');
+            div.className = 'rule-item ' + (rule.enabled ? 'enabled' : 'disabled');
+            div.innerHTML = `
                 <div class="rule-info">
-                    <p><strong>Local:</strong> ${rule.localUrl}</p>
-                    <p><strong>Remote:</strong> ${rule.remoteUrlFilter}</p>
-                    <p><strong>Type:</strong> ${rule.resourceType}</p>
+                    <p><span class="rule-label">Remote:</span> ${rule.remoteUrlFilter}</p>
+                    <p><span class="rule-label">Local:</span> ${rule.localUrl}</p>
+                    <p><span class="rule-label">Type:</span> ${rule.resourceType}</p>
                 </div>
-                <button class="toggle-rule" data-id="${rule.id}">${rule.enabled ? 'Disable' : 'Enable'}</button>
-                <button class="delete-rule" data-id="${rule.id}">Delete</button>
+                <div class="rule-actions">
+                    <button class="btn-toggle toggle-rule" data-id="${rule.id}">${rule.enabled ? 'Disable' : 'Enable'}</button>
+                    <button class="btn-delete delete-rule" data-id="${rule.id}">Delete</button>
+                </div>
             `;
-            li.classList.add(rule.enabled ? 'enabled-rule' : 'disabled-rule');
-            rulesList.appendChild(li);
+            rulesList.appendChild(div);
         });
     }
 
     async function loadExtensionStatus() {
         chrome.storage.local.get({ extensionEnabled: true }, (result) => {
             extensionStatusToggle.checked = result.extensionEnabled;
+            updateStatusLabel(result.extensionEnabled);
         });
     }
 
@@ -134,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         a.download = 'redirect-rules.json';
         a.click();
         URL.revokeObjectURL(url);
+        showStatus('Exported ' + rules.length + ' rules', 'success');
     });
 
     // Import rules from JSON
@@ -148,15 +162,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const text = await file.text();
             const rules = JSON.parse(text);
             if (!Array.isArray(rules)) {
-                alert('Invalid JSON: expected an array of rules.');
+                showStatus('Invalid JSON: expected an array of rules.', 'error');
                 return;
             }
             await saveRules(rules);
             await applyRulesToExtension(rules);
             loadRules();
+            showStatus('Imported ' + rules.length + ' rules', 'success');
         } catch (e) {
-            alert('Failed to import: ' + e.message);
+            showStatus('Failed to import: ' + e.message, 'error');
         }
         importFile.value = '';
+    });
+
+    // Pop out into a persistent window
+    document.getElementById('popoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        const popWidth = 520;
+        const popHeight = 600;
+        chrome.windows.getCurrent((currentWindow) => {
+            const left = Math.round(currentWindow.left + currentWindow.width - popWidth - 20);
+            const top = currentWindow.top + 80;
+            chrome.windows.create({
+                url: chrome.runtime.getURL('index.html?window=1'),
+                type: 'popup',
+                width: popWidth,
+                height: popHeight,
+                left: left,
+                top: top,
+            });
+            window.close();
+        });
     });
 });
