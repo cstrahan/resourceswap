@@ -10,13 +10,13 @@ rm -rf "$DIST/chrome" "$DIST/firefox"
 
 # Build Chrome version
 mkdir -p "$DIST/chrome/icons"
-cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$DIST/chrome/"
+cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$SRC/style.css" "$DIST/chrome/"
 cp "$SRC/icons/"*.png "$DIST/chrome/icons/"
 cp "$SRC/manifest.chrome.json" "$DIST/chrome/manifest.json"
 
 # Build Firefox version
 mkdir -p "$DIST/firefox/icons"
-cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$DIST/firefox/"
+cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$SRC/style.css" "$DIST/firefox/"
 cp "$SRC/icons/"*.png "$DIST/firefox/icons/"
 cp "$SRC/manifest.firefox.json" "$DIST/firefox/manifest.json"
 
