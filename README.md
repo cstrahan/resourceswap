@@ -2,6 +2,8 @@
 
 A browser extension (Chrome + Firefox) that intercepts network requests for production JS, CSS, and other resources and redirects them to a local development server. Test local code changes against a live production environment without modifying the production server.
 
+![ResourceSwap popup showing the add-rule form with Remote URL, Local URL, and Resource Type fields](screenshot.png)
+
 ## Features
 
 - Redirect any resource type (scripts, stylesheets, XHR/fetch, images, fonts, media)
