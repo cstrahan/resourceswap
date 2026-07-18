@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Local Dev Resource Redirect",
+  "name": "ResourceSwap",
   "version": "1.0.0",
   "description": "Intercepts production JS/CSS files and redirects them to a local development server.",
   "permissions": [

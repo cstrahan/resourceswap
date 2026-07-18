@@ -1,4 +1,4 @@
-# Local Dev Resource Redirect
+# ResourceSwap
 
 A browser extension (Chrome + Firefox) that intercepts network requests for production JS, CSS, and other resources and redirects them to a local development server. Test local code changes against a live production environment without modifying the production server.
 
