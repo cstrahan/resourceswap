@@ -5,21 +5,38 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC="$SCRIPT_DIR/src"
 DIST="$SCRIPT_DIR/dist"
 
-# Clean
-rm -rf "$DIST/chrome" "$DIST/firefox"
+# Extension name and version, used for archive filenames.
+NAME="resourceswap"
+VERSION="$(grep -m1 '"version"' "$SRC/manifest.chrome.json" \
+  | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
 
-# Build Chrome version
-mkdir -p "$DIST/chrome/icons"
-cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$SRC/style.css" "$DIST/chrome/"
-cp "$SRC/icons/"*.png "$DIST/chrome/icons/"
-cp "$SRC/manifest.chrome.json" "$DIST/chrome/manifest.json"
+# Files shared by both builds (everything except the manifest).
+COMMON_FILES=(background.js scripts.js index.html style.css)
 
-# Build Firefox version
-mkdir -p "$DIST/firefox/icons"
-cp "$SRC/background.js" "$SRC/scripts.js" "$SRC/index.html" "$SRC/style.css" "$DIST/firefox/"
-cp "$SRC/icons/"*.png "$DIST/firefox/icons/"
-cp "$SRC/manifest.firefox.json" "$DIST/firefox/manifest.json"
+# Build one browser target into $DIST/<target> and produce a store-ready zip.
+#   $1 = target name (chrome|firefox)
+build_target() {
+  local target="$1"
+  local out="$DIST/$target"
+  local zip="$DIST/$NAME-$target-$VERSION.zip"
 
-echo "Build complete:"
-echo "  Chrome → $DIST/chrome/"
-echo "  Firefox → $DIST/firefox/"
+  rm -rf "$out" "$zip"
+  mkdir -p "$out/icons"
+
+  local f
+  for f in "${COMMON_FILES[@]}"; do
+    cp "$SRC/$f" "$out/"
+  done
+  cp "$SRC/icons/"*.png "$out/icons/"
+  cp "$SRC/manifest.$target.json" "$out/manifest.json"
+
+  # Zip the contents (not the directory itself) so manifest.json sits at the
+  # archive root, as required by the Chrome Web Store and Firefox Add-ons.
+  ( cd "$out" && zip -r -X "$zip" . -x '*.DS_Store' >/dev/null )
+
+  echo "  $target: $zip"
+}
+
+echo "Building $NAME $VERSION"
+build_target chrome
+build_target firefox

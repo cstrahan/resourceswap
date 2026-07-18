@@ -100,28 +100,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Build a "<label> <value>" info line with the DOM API (not innerHTML) so
+    // untrusted rule fields from imported JSON can't be interpreted as markup.
+    function ruleInfoLine(label, value) {
+        const p = document.createElement('p');
+        const span = document.createElement('span');
+        span.className = 'rule-label';
+        span.textContent = label;
+        p.appendChild(span);
+        p.append(' ' + value);
+        return p;
+    }
+
     async function loadRules() {
         const rules = await getStoredRules();
-        rulesList.innerHTML = '';
+        rulesList.textContent = '';
         if (rules.length === 0) {
-            rulesList.innerHTML = '<div class="empty-msg">No redirect rules added yet.</div>';
+            const empty = document.createElement('div');
+            empty.className = 'empty-msg';
+            empty.textContent = 'No redirect rules added yet.';
+            rulesList.appendChild(empty);
             return;
         }
 
         rules.forEach(rule => {
             const div = document.createElement('div');
             div.className = 'rule-item ' + (rule.enabled ? 'enabled' : 'disabled');
-            div.innerHTML = `
-                <div class="rule-info">
-                    <p><span class="rule-label">Remote:</span> ${rule.remoteUrlFilter}</p>
-                    <p><span class="rule-label">Local:</span> ${rule.localUrl}</p>
-                    <p><span class="rule-label">Type:</span> ${rule.resourceType}</p>
-                </div>
-                <div class="rule-actions">
-                    <button class="btn-toggle toggle-rule" data-id="${rule.id}">${rule.enabled ? 'Disable' : 'Enable'}</button>
-                    <button class="btn-delete delete-rule" data-id="${rule.id}">Delete</button>
-                </div>
-            `;
+
+            const info = document.createElement('div');
+            info.className = 'rule-info';
+            info.appendChild(ruleInfoLine('Remote:', rule.remoteUrlFilter));
+            info.appendChild(ruleInfoLine('Local:', rule.localUrl));
+            info.appendChild(ruleInfoLine('Type:', rule.resourceType));
+
+            const actions = document.createElement('div');
+            actions.className = 'rule-actions';
+
+            const toggle = document.createElement('button');
+            toggle.className = 'btn-toggle toggle-rule';
+            toggle.dataset.id = rule.id;
+            toggle.textContent = rule.enabled ? 'Disable' : 'Enable';
+
+            const del = document.createElement('button');
+            del.className = 'btn-delete delete-rule';
+            del.dataset.id = rule.id;
+            del.textContent = 'Delete';
+
+            actions.appendChild(toggle);
+            actions.appendChild(del);
+
+            div.appendChild(info);
+            div.appendChild(actions);
             rulesList.appendChild(div);
         });
     }
