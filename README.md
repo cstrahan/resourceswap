@@ -20,7 +20,7 @@ Run the build script to produce browser-specific builds:
 ./build.sh
 ```
 
-This copies shared source files from `src/` into `dist/chrome/` and `dist/firefox/`, each with the appropriate `manifest.json`.
+This copies shared source files from `src/` into `dist/chrome/` and `dist/firefox/`, each with the appropriate `manifest.json`, and produces store-ready archives (`dist/resourceswap-chrome-<version>.zip` and `dist/resourceswap-firefox-<version>.zip`) with `manifest.json` at the archive root.
 
 ## Installation
 
@@ -47,6 +47,17 @@ src/
   manifest.chrome.json    Chrome manifest (MV3, service_worker)
   manifest.firefox.json   Firefox manifest (MV3, background scripts)
   icons/                  Extension icons (SVG source + generated PNGs)
-build.sh                  Copies src/ to dist/{chrome,firefox}
+build.sh                  Builds dist/{chrome,firefox} and store-ready zips
 dist/                     Build output (gitignored)
 ```
+
+## License
+
+This project is dual-licensed under either of
+
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+- Mozilla Public License, Version 2.0 ([LICENSE-MPL-2.0](LICENSE-MPL-2.0) or <https://www.mozilla.org/MPL/2.0/>)
+
+at your option. `SPDX-License-Identifier: MIT OR MPL-2.0`
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this project by you shall be dual-licensed as above, without any additional terms or conditions.
